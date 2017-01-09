@@ -332,7 +332,13 @@ func (c *ClientConn) handlePrepareExec(stmt sqlparser.Statement, sql string, arg
 }
 
 func (c *ClientConn) log(stmt sqlparser.Statement, sql string, args []interface{}){
-	
+	fout,err := os.Open("/data2/log/kindshard.log")
+	if err!=nil && os.IsNotExist(err) {
+		fout,err = os.Create("/data2/log/kindshard.log")
+	}
+	if err==nil{
+		fout.WriteString(sql+"\n")
+	}
 }
 
 func (c *ClientConn) bindStmtArgs(s *Stmt, nullBitmap, paramTypes, paramValues []byte) error {
