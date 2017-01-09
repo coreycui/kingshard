@@ -318,6 +318,8 @@ func (c *ClientConn) handlePrepareExec(stmt sqlparser.Statement, sql string, arg
 		golog.Error("ClientConn", "handlePrepareExec", err.Error(), c.connectionId)
 		return err
 	}
+	
+	c.log(stmt,sql,args)
 
 	status := c.status | rs[0].Status
 	if rs[0].Resultset != nil {
@@ -327,6 +329,10 @@ func (c *ClientConn) handlePrepareExec(stmt sqlparser.Statement, sql string, arg
 	}
 
 	return err
+}
+
+func (c *ClientConn) log(stmt sqlparser.Statement, sql string, args []interface{}){
+	
 }
 
 func (c *ClientConn) bindStmtArgs(s *Stmt, nullBitmap, paramTypes, paramValues []byte) error {
