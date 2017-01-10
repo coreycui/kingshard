@@ -250,6 +250,7 @@ func (c *ClientConn) executeInMultiNodes(conns map[string]*backend.BackendConn, 
 			} else {
 				state = "OK"
 				rs[i] = r
+				c.log(nil,v,args)
 			}
 			execTime := float64(time.Now().UnixNano()-startTime) / float64(time.Millisecond)
 			if c.proxy.logSql[c.proxy.logSqlIndex] != golog.LogSqlOff &&
