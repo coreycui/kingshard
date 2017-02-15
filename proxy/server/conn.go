@@ -297,7 +297,7 @@ func (c *ClientConn) dispatch(data []byte) error {
 	cmd := data[0]
 	data = data[1:]
 	
-	fmt.Println("dispatch:"+hack.String(data)+"-----"+strconv.Itoa(cmd))
+	fmt.Printf("dispatch:%s = %i",hack.String(data),cmd)
 	
 	switch cmd {
 	case mysql.COM_QUIT:
