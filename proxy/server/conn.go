@@ -21,7 +21,7 @@ import (
 	"net"
 	"runtime"
 	"sync"
-
+	"strconv"
 	"github.com/flike/kingshard/backend"
 	"github.com/flike/kingshard/core/golog"
 	"github.com/flike/kingshard/core/hack"
@@ -296,7 +296,9 @@ func (c *ClientConn) dispatch(data []byte) error {
 	c.proxy.counter.IncrClientQPS()
 	cmd := data[0]
 	data = data[1:]
-
+	
+	fmt.Println("dispatch:"+hack.String(data)+"-----"+strconv.Itoa(cmd))
+	
 	switch cmd {
 	case mysql.COM_QUIT:
 		c.handleRollback()
