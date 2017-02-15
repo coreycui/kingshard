@@ -36,11 +36,8 @@ import (
 )
 
 type Schema struct {
-	db string
-
 	nodes map[string]*backend.Node
-
-	rule *router.Router
+	rule  *router.Router
 }
 
 type BlacklistSqls struct {
@@ -59,7 +56,7 @@ type Server struct {
 	addr     string
 	user     string
 	password string
-	db       string
+	//db       string
 
 	statusIndex        int32
 	status             [2]int32
@@ -174,7 +171,7 @@ func (s *Server) parseNodes() error {
 
 	for _, v := range cfg.Nodes {
 		if _, ok := s.nodes[v.Name]; ok {
-			return fmt.Errorf("duplicate node [%s].", v.Name)
+			return fmt.Errorf("duplicate node [%s]", v.Name)
 		}
 
 		n, err := s.parseNode(v)
@@ -191,17 +188,17 @@ func (s *Server) parseNodes() error {
 func (s *Server) parseSchema() error {
 	schemaCfg := s.cfg.Schema
 	if len(schemaCfg.Nodes) == 0 {
-		return fmt.Errorf("schema [%s] must have a node.", schemaCfg.DB)
+		return fmt.Errorf("schema must have a node")
 	}
 
 	nodes := make(map[string]*backend.Node)
 	for _, n := range schemaCfg.Nodes {
 		if s.GetNode(n) == nil {
-			return fmt.Errorf("schema [%s] node [%s] config is not exists.", schemaCfg.DB, n)
+			return fmt.Errorf("schema node [%s] config is not exists", n)
 		}
 
 		if _, ok := nodes[n]; ok {
-			return fmt.Errorf("schema [%s] node [%s] duplicate.", schemaCfg.DB, n)
+			return fmt.Errorf("schema node [%s] duplicate", n)
 		}
 
 		nodes[n] = s.GetNode(n)
@@ -213,11 +210,9 @@ func (s *Server) parseSchema() error {
 	}
 
 	s.schema = &Schema{
-		db:    schemaCfg.DB,
 		nodes: nodes,
 		rule:  rule,
 	}
-	s.db = schemaCfg.DB
 
 	return nil
 }
@@ -236,16 +231,18 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	s.logSql[s.logSqlIndex] = cfg.LogSql
 	atomic.StoreInt32(&s.slowLogTimeIndex, 0)
 	s.slowLogTime[s.slowLogTimeIndex] = cfg.SlowLogTime
-	if len(cfg.Charset) != 0 {
-		cid, ok := mysql.CharsetIds[cfg.Charset]
-		if !ok {
-			return nil, errors.ErrInvalidCharset
-		}
-		//change the default charset
-		mysql.DEFAULT_CHARSET = cfg.Charset
-		mysql.DEFAULT_COLLATION_ID = cid
-		mysql.DEFAULT_COLLATION_NAME = mysql.Collations[cid]
+
+	if len(cfg.Charset) == 0 {
+		cfg.Charset = mysql.DEFAULT_CHARSET //utf8
 	}
+	cid, ok := mysql.CharsetIds[cfg.Charset]
+	if !ok {
+		return nil, errors.ErrInvalidCharset
+	}
+	//change the default charset
+	mysql.DEFAULT_CHARSET = cfg.Charset
+	mysql.DEFAULT_COLLATION_ID = cid
+	mysql.DEFAULT_COLLATION_NAME = mysql.Collations[cid]
 
 	if err := s.parseBlackListSqls(); err != nil {
 		return nil, err
@@ -353,7 +350,8 @@ func (s *Server) onConn(c net.Conn) {
 	}
 	if err := conn.Handshake(); err != nil {
 		golog.Error("server", "onConn", err.Error(), 0)
-		c.Close()
+		conn.writeError(err)
+		conn.Close()
 		return
 	}
 

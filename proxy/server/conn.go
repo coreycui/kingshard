@@ -104,9 +104,6 @@ func (c *ClientConn) Handshake() error {
 		golog.Error("server", "readHandshakeResponse",
 			err.Error(), c.connectionId,
 			"msg", "read Handshake Response error")
-
-		c.writeError(err)
-
 		return err
 	}
 
@@ -118,7 +115,6 @@ func (c *ClientConn) Handshake() error {
 	}
 
 	c.pkg.Sequence = 0
-
 	return nil
 }
 
@@ -248,9 +244,6 @@ func (c *ClientConn) readHandshakeResponse() error {
 		db = string(data[pos : pos+bytes.IndexByte(data[pos:], 0)])
 		pos += len(c.db) + 1
 
-	} else {
-		//if connect without database, use default db
-		db = c.proxy.schema.db
 	}
 	c.db = db
 
